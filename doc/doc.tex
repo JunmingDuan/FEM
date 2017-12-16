@@ -1,0 +1,244 @@
+\documentclass[a4paper, 11pt]{ctexart}
+\usepackage{srcltx,graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{color}
+\usepackage{lscape}
+\usepackage{multirow}
+\usepackage{cases}
+\usepackage{enumerate}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{float}
+\usepackage{bm}
+\usepackage{psfrag}
+\usepackage[hang]{subfigure}
+
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+\newtheorem{definition}{定义}
+\newtheorem{comment}{注}
+\newtheorem{conjecture}{Conjecture}
+
+\setlength{\oddsidemargin}{0cm}
+\setlength{\evensidemargin}{0cm}
+\setlength{\textwidth}{150mm}
+\setlength{\textheight}{230mm}
+
+\newcommand\note[2]{{{\bf #1}\color{red} [ {\it #2} ]}}
+%\newcommand\note[2]{{ #1 }} % using this line in the formal version
+
+\newcommand\bbC{\mathbb{C}}
+\newcommand\bbL{\mathbb{L}}
+\newcommand\bbR{\mathbb{R}}
+\newcommand\bbN{\mathbb{N}}
+\newcommand\bbV{\mathbb{V}}
+\newcommand\bbH{\mathbb{H}}
+
+\newcommand\diag{\mathrm{diag}}
+\newcommand\tr{\mathrm{tr}}
+\newcommand\dd{\mathrm{d}}
+\renewcommand\div{\mathrm{div}}
+
+\newcommand\bx{\boldsymbol{x}}
+\newcommand\bF{\boldsymbol{F}}
+\newcommand\bof{\boldsymbol{f}}
+\newcommand\bu{\boldsymbol{u}}
+\newcommand\bn{\boldsymbol{n}}
+\newcommand\bv{\boldsymbol{v}}
+\newcommand\bV{\boldsymbol{V}}
+\newcommand\bU{\boldsymbol{U}}
+\newcommand\bA{\boldsymbol{A}}
+\newcommand\vecf{\boldsymbol{f}}
+\newcommand\hatF{\hat{F}}
+\newcommand\flux{\hat{F}_{j+1/2}}
+\newcommand\diff{\,\mathrm{d}}
+\newcommand\Norm[1]{\lvert\lvert#1\rvert\rvert}
+
+\newcommand\pd[2]{\dfrac{\partial {#1}}{\partial {#2}}}
+\newcommand\od[2]{\dfrac{\dd {#1}}{\dd {#2}}}
+\newcommand\abs[1]{\lvert #1 \rvert}
+\newcommand\norm[1]{\lvert\lvert #1 \rvert\rvert}
+
+\title{有限元方法上机作业}
+\author{段俊明\thanks{北京大学数学科学学院，科学与工程计算系，邮箱： {\tt duanjm@pku.edu.cn}}
+}
+
+\begin{document}
+\maketitle
+
+\section{问题重述}
+求解正方形区域$(0,1)\times (0,1)$上的Poisson方程混合边值问题
+\begin{equation}
+	\begin{cases}
+		-\Delta u = f, \\
+		u = u_0, \quad \bx \in \partial\Omega_0. \\
+		\pd{u}{\nu}+\beta u = g, \quad \bx \in \partial\Omega_1. \\
+	\end{cases}
+\end{equation}
+其中，$\partial\Omega_0= \{0\}\times[0,1],\beta>0$.
+
+用$C^0$类型(1)矩形和型(1)三角形有限元构造的有限元函数空间上
+数值求解该问题.
+
+\section{理论分析}
+将原问题化为变分形式:
+\begin{equation}
+	\begin{cases}
+		a(u,v) = f(v), \\
+		a(u,v) = \int_\Omega \nabla u·\nabla v\dd \bx + \beta\int_{\Omega_1}uv\dd s, \\
+		f(v) = \int_\Omega fv\dd \bx + \int_{\Omega_1}gv\dd s, \\
+		u\in\bbV_1=\{\bbH^1(\Omega),u|_{\partial\Omega_0 = u_0} \}, \\
+		v\in\bbV_2=\{\bbH^1(\Omega),v|_{\partial\Omega_0 = 0} \}. \\
+	\end{cases}
+\end{equation}
+
+取xy方向同样为$N$的网格数，将以上变分问题离散化,等价与求解线性方程组:
+\begin{equation}
+	\sum_{i=1}^{N_h}a(\phi_j,\phi_i)u_j=(f,\phi_i),\quad i=1,2,\dots,N_h.
+\end{equation}
+其中$N_h$为总节点数，$\phi_i$为一组基函数,在第$i$个节点上为1,其它节点处为0.
+$u_i$为第$i$个节点上的数值解.
+
+将上述方程组写作:
+$$\boldsymbol K\bu_h=\boldsymbol f,$$
+并称$\boldsymbol K$为刚度矩阵,$\bu_h$为位移向量,$\boldsymbol f$为载荷向量.
+
+下面需要确定的就是$\boldsymbol K$和$\boldsymbol f$的元素.
+
+用$e$来表示单元序号，$T_e$表示单元，$a^e(u,v)=\int_{T_e}\nabla u·\nabla v\dd \bx$,
+定义单元刚度矩阵$\boldsymbol K^e$和单元载荷向量$\boldsymbol f^e$,
+则
+\begin{align}
+	k_{ij}=a(\phi_j,\phi_i)=\sum_{e=1}^Ma^e(\phi_j,\phi_i)=\sum_{e=1}^Mk_{ij}^e.
+\end{align}
+
+其中$k_{ij}^e$表示第$e$个单元的单元刚度矩阵的$(i,j)$元素.
+对于型(1)三角形单元，书上$P_{213}$已经给出单元刚度矩阵$\boldsymbol K^e$的结果;
+对于型(1)矩形单元,下面给出单元刚度矩阵:
+
+取边长为1的正方形,有四个节点$(0,0),(1,0),(1,1),(0,1)$,给出它们的一组基:
+$$(1-x)(1-y),x(1-y),xy,(1-x)y.$$
+利用与书上类似的仿射变换，将任意正方形上的单元刚度矩阵统一到标准正方形上来处理,
+最终得到:
+\[ \boldsymbol K^e=\dfrac{h^2}{\det A_e}\begin{bmatrix}
+		\frac 23 & -\frac 16 && -\frac 13 && -\frac 16 \\
+		-\frac 16 & \frac 23 && -\frac 16 && -\frac 13 \\
+		-\frac 13 & -\frac 16 && \frac 23 && -\frac 16 \\
+		-\frac 16 & -\frac 13 && -\frac 16 && \frac 23 \\
+	\end{bmatrix} \]
+
+当$f$为常数时，与书上类似得到:
+\[ \boldsymbol f^e=\dfrac 14f(T_e)\abs{T_e}(1,1,1)^\mathrm T. \]
+
+对于边界项积分，采用数值积分公式,并将其加入到刚度矩阵和载荷向量中;
+对于Diriclet边界上的节点,将其从生成的线性方程组中去除.
+
+\section{算法}
+基于以上分析，有如下算法:
+
+\begin{algorithm}[H]
+\caption{生成刚度矩阵和载荷向量}
+\SetAlgoNoLine
+$\boldsymbol K= (k(i,j))=0;\boldsymbol f=(f(i))=0;$\\
+\For{$e=1:M$}
+{
+	$\text{计算单元刚度矩阵}\boldsymbol K^e=(k^e(\alpha,\beta))$; \\
+	$\text{计算单元载荷向量}\boldsymbol f^e=(f^e(\alpha))$; \\
+	$k^e(en(\alpha,e),en(\beta,e))+=k^e(\alpha,\beta)$; \\
+	$f^e(en(\alpha,e))+=f^e(\alpha)$; \\
+}
+\label{al:fem}
+\end{algorithm}
+
+其中$en(\alpha,e)$是取值为整体节点序数的数组，$\alpha$为局部节点序数.
+还需要保存单元坐标，$cd(i,nd)$是取值为空间坐标的数组，表示第$nd$个整体节点
+的空间坐标的第$i$个分量.
+
+\section{程序说明}
+main.cpp是调用fem.h的主函数，space.h是计算cd,en两个数组的头文件,
+fem.cpp实现了该算例生成线性方程组并求解的过程.
+线性方程组部分调用了Eigen的稀疏矩阵LU求解器.
+
+\section{数值结果}
+\subsection{算例1}
+取$\beta=1$,精确解为$x^3+y^3$,得到相应的初边值.
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{c|c|c|c}
+		$N$ & err$(\bbL^1)$ & err$(\bbL^2)$ & err$(\bbL^\infty)$ \\ \hline
+10 &1.416766e-03 &2.031798e-03 &1.116735e-02 \\
+20 &3.591712e-04 &4.899270e-04 &3.612197e-03 \\
+40 &9.024779e-05 &1.193004e-04 &1.109726e-03 \\
+80 &2.262573e-05 &2.938159e-05 &3.292769e-04 \\
+160&5.664737e-06 &7.289209e-06 &9.528994e-05 \\
+\hline 
+10 &1.455257e-03 &1.972807e-03 &7.418216e-03 \\
+20 &3.717288e-04 &4.885795e-04 &2.193739e-03 \\
+40 &9.408361e-05 &1.215063e-04 &6.277910e-04 \\
+80 &2.367781e-05 &3.030359e-05 &1.758027e-04 \\
+160&5.939958e-06 &7.568123e-06 &4.850220e-05 \\
+	\end{tabular}
+	\caption{算例1各范数误差}
+	\label{tab:1}
+\end{table}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics{../images/exp1.pdf}
+	\caption{算例1两种单元三种范数下的误差-N双对数坐标图}
+	\label{fig:1}
+\end{figure}
+
+\subsection{算例2}
+取$\beta=1$,精确解为$e^x\sin(2\pi y)$,得到相应的初边值.
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{c|c|c|c}
+		$N$ & err$(\bbL^1)$ & err$(\bbL^2)$ & err$(\bbL^\infty)$ \\ \hline
+10 &.604314e-02 &2.684293e-02 &1.329546e-01 \\
+20 &3.606006e-03 &6.008061e-03 &3.564902e-02 \\
+40 &8.486610e-04 &1.400736e-03 &9.365661e-03 \\
+80 &2.052805e-04 &3.368726e-04 &2.444344e-03 \\
+160&5.045758e-05 &8.252397e-05 &6.360895e-04 \\
+\hline                                   
+10 &1.659168e-02 &2.622751e-02 &7.467132e-02 \\
+20 &3.744808e-03 &5.911147e-03 &1.850623e-02 \\
+40 &8.878184e-04 &1.393688e-03 &4.617107e-03 \\
+80 &2.151909e-04 &3.375518e-04 &1.154275e-03 \\
+160&5.291719e-05 &8.300403e-05 &2.886370e-04 \\
+	\end{tabular}
+	\caption{算例2各范数误差}
+	\label{tab:2}
+\end{table}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics{../images/exp2.pdf}
+	\caption{算例2两种单元三种范数下的误差-N双对数坐标图}
+	\label{fig:2}
+\end{figure}
+
+\subsection{结果分析}
+可以看到，两个算例均收敛到了精确解.
+在三角形单元和矩形单元的
+两种情况下它们的收敛阶是相同的,在三种范数下的收敛阶也都相同.
+
+算例1的数值解误差收敛阶约为2,
+算例2的数值解误差收敛阶略大于2,
+
+虽然在两种计算单元下误差收敛阶相同，但
+在$\bbL^\infty$范数下,
+矩形单元下的误差明显小于三角形单元.
+这是因为矩形单元有4个自由度，使得计算结果
+优于三角形.
+
+\section{总结}
+有限元方法求得的数值解的误差在不同范数意义下基本相同,
+数值结果显示出矩形单元的误差在$\bbL^\infty$范数下要优于
+三角形单元.
+
+\end{document}
+
