@@ -88,7 +88,7 @@ void fem::createLinEqu_triangle(func f1, func f2, func u0, func v0,
   //四条边Diriclet边界(debug)
   //DiricletBD_full(u0, v0);
 
-  A.prune(1e-13);
+  //A.prune(1e-13);
   A.makeCompressed();
 
   //std::cout << A << std::endl;
@@ -387,9 +387,7 @@ void fem::print(const std::string& filename, const std::string& filename1,
       x[1] = h*j;
       outfile
         << NumSol[j*2*(Nx+1)+2*i] << " "
-        << NumSol[j*2*(Nx+1)+2*i+1] << " "
-        << u0(x, h) << " "
-        << v0(x, h) << "\n";
+        << NumSol[j*2*(Nx+1)+2*i+1] << "\n";
     }
   }
   outfile << std::endl;

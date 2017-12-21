@@ -18,7 +18,7 @@ figure(1)
 surf(x, y, reshape(num_u, N, N)', 'EdgeColor', 'interp');
 colormap jet
 colorbar
-caxis([0,0.2]);
+%caxis([0,0.2]);
 xlabel('x-displament');
 %view(0,90);
 
@@ -27,6 +27,7 @@ surf(x, y, reshape(num_v, N, N)', 'EdgeColor', 'interp');
 colormap jet
 colorbar
 xlabel('y-displament');
+view(90,0);
 
 data = load(['N',num2str(n),'_es.dat']);
 num_ex = data(:,1);

@@ -42,7 +42,7 @@
 \newcommand\bphi{\bm{\phi}}
 \newcommand\trace[1]{tr(#1)}
 
-\title{有限元方法上机作业}
+\title{有限元方法上机作业\\ ——弹性力学平面问题求解}
 
 \begin{document}
 \author{段俊明\thanks{北京大学数学科学学院，科学与工程计算系，邮箱： {\tt duanjm@pku.edu.cn}}
@@ -61,7 +61,7 @@
   \bsig(\bu)=\lambda\trace{\beps}I+2\mu\beps,
 \end{equation}
 应变和应力可表示成对称的三阶矩阵,
-其中$\lambda,\mu$是拉梅常数,~$\lambda=3.65e4,\lambda+2\mu=6.70e4$.
+其中$\lambda,\mu$是拉梅常数,~$\lambda=3.65e10,\lambda+2\mu=6.70e10$.
 考虑平衡方程,
 \begin{equation}
   -\sum\limits_{j=1}^3 \partial_j\sigma_{ij}(\bu)=f_i,\quad i=1,2,3,
@@ -74,7 +74,7 @@
   &\sum\limits_{j=1}^3 \sigma_{ij}(\bu)\bn_j=g_i,\quad on~\Gamma_1,\\
   &\bu=0,\quad on~\Gamma_0,
 \end{align}
-其中$\Gamma_0$是固定边界,~$\Gamma_1$是自由边界.
+其中$\Gamma_0$是固定边界,即位移为0,~$\Gamma_1$是自由边界,即只受法向力.
 
 考虑二维平面应变问题,即假设$z$方向应变为0,有
 $u_3=0,~\beps_{31}=\beps_{32}=\beps_{33} =0$,
@@ -82,7 +82,7 @@ $u_3=0,~\beps_{31}=\beps_{32}=\beps_{33} =0$,
 由$\bsig_{33}=\lambda(\beps_{11}+\beps_{22})+2\mu\beps_{33}$
 得到$\bsig_{33}=\lambda(\beps_{11}+\beps_{22})$.
 
-求解正方形区域$\Omega=[0,10]\times[0,10]$上的平面弹性力学方程组混合边值问题.
+求解正方形区域$\Omega=[0,0.1]\times[0,0.1]$上的平面弹性力学方程组混合边值问题.
 其中,~$\Gamma_0$是正方形的底边,使用固定边界条件,~$\Gamma_1$是正方形的另外三条边,
 使用自由边界条件.
 
@@ -253,14 +253,82 @@ $u=u_1\lambda_1+u_2\lambda_2+u_3\lambda_3,v=v_1\lambda_1+v_2\lambda_2+v_3\lambda
 的Gauss积分点,边界上的线积分使用3阶代数精度的一维的Gauss积分点.
 
 \section{数值实验}
-令体积力$f_1=f_2=0$,沿法向受力为$0$,即$g_1=g_2=0$,除了左上角的
-第一个网格,它的受力为$\sigma_x=1,\sigma_y=-1,\sigma_{xy}=0$,则它的两条边的边界条件为
-$$g_{l1}=-1,$$
+令体积力$f_1=f_2=0$,除了左上角的第一个网格的边界上受到法向外力,其它网格单元边界
+上法向受力为$0$,
+左上角的第一个网格它的受力大小为$F$,方向为$(1,-1)$,
+$$g_{l1}=F,$$
 $$g_{l2}=0,$$
-$$g_{u1}=0, $$
-$$g_{u2}=-1, $$
-下标$l,r,u$分别表示左、右、上边界,下标$1,2$分别表示第一、二个分量.
+$$g_{u1}=0,$$
+$$g_{u2}=-F,$$
+下标$l,u$分别表示左、上边界,下标$1,2$分别表示第一、二个分量.
 
+取$F=1e12$,计算不同网格下数值解,网格从$10\times 10$加密到$1280\times 1280$,
+以$1280\times 1280$下数值解作为精确解计算$L^2$误差.
+\begin{table}[H]
+\centering
+\begin{tabular}{|r|c|c|c|c|} \hline
+ $N$  & $u$的$l^2$范数& $u$的$l^2$误差阶 & $v$的$l^2$范数& $v$的$l^2$误差阶\\ \hline
+ 10	  & 0.5897 &  -     & 0.1332 &  -     \\
+ 20	  & 0.2852 & 1.0477 & 0.0640 & 1.0568 \\
+ 40	  & 0.1386 & 1.0409 & 0.0308 & 1.0574 \\
+ 80	  & 0.0669 & 1.0504 & 0.0148 & 1.0585 \\
+ 160	& 0.0317 & 1.0763 & 0.0069 & 1.0992 \\
+ 320	& 0.0134 & 1.2403 & 0.0029 & 1.2287 \\
+ 640	& 0.0046 & 1.5346 & 0.0010 & 1.5527 \\
+	\hline
+\end{tabular}
+\caption{位移的精度}\label{tab:jingdu}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \subfigure[$x$方向位移,网格$640\times 640$]{
+    \includegraphics[width=0.45\textwidth]{img/N640_u.pdf}
+  }
+  \subfigure[$y$方向位移,网格$640\times 640$]{
+    \includegraphics[width=0.45\textwidth]{img/N640_v.pdf}
+  }
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \subfigure[应变$\varepsilon_x$,网格$640\times 640$]{
+    \includegraphics[width=0.45\textwidth]{img/N640_ex.pdf}
+  }
+  \subfigure[应力$\sigma_x$,网格$640\times 640$]{
+    \includegraphics[width=0.45\textwidth]{img/N640_sx.pdf}
+  }
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \subfigure[应变$\varepsilon_y$,网格$640\times 640$]{
+    \includegraphics[width=0.45\textwidth]{img/N640_ey.pdf}
+  }
+  \subfigure[应力$\sigma_y$,网格$640\times 640$]{
+    \includegraphics[width=0.45\textwidth]{img/N640_sy.pdf}
+  }
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \subfigure[应变$\varepsilon_{xy}$,网格$640\times 640$]{
+    \includegraphics[width=0.45\textwidth]{img/N640_exy.pdf}
+  }
+  \subfigure[应力$\sigma_{xy}$,网格$640\times 640$]{
+    \includegraphics[width=0.45\textwidth]{img/N640_sxy.pdf}
+  }
+\end{figure}
+
+表格给出了$L^2$误差和误差阶,
+以上图片展示了$640\times 640$网格下的位移、应变、应力等物理量.
+当网格加密时,数值解是收敛的,为一阶精度,当网格加密时,误差阶在上升.
+从图中可以看到,计算出的结果符合物理直观,在左上角处位移、应变、应力的
+绝对值最大,且满足底边的固定边界条件,可以认为计算结果是正确的.
+作业目录中有位移关于受力的gif图片,展示了外力大小从$1e11$变化到$9e11$
+的位移二维纹影图,从中可以看到随着外力增大,位移随之增大的过程,
+更加直观地反映了外力对位移的影响.
 
 \end{document}
+
 

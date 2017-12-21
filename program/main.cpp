@@ -37,6 +37,8 @@ double gl1(cor& p, double h){
   if(fabs(p[0]) < 1e-8 && fabs(0.1-p[1]) < h)
     return F;
   else return 0;
+  //return 0;
+  //return F;
 }
 double gl2(cor& p, double h){
   return 0;
@@ -54,6 +56,8 @@ double gu2(cor& p, double h){
   if(fabs(0.1-p[1]) < 1e-8 && fabs(p[0]) < h)
     return -F;
   else return 0;
+  //return 0;
+  //return -F;
 }
 
 int main(int argc, char* argv[])
@@ -76,9 +80,8 @@ int main(int argc, char* argv[])
   std::cout << "Solve the linear equation..." << std::endl;
   X1.run();
   //std::cout << "Calculate the strain and the stress..." << std::endl;
-  //X1.cal_eps_sig();
+  X1.cal_eps_sig();
   std::cout << "Print the solution to " << uv_filename << " and " << eps_sig_filename << "..." << std::endl;
-  //X1.print(uv_filename, eps_sig_filename, u0, v0, eps_x, eps_y, eps_xy, sig_x, sig_y, sig_xy);
   X1.print(uv_filename, eps_sig_filename, u0, v0);
 
   X1.print_geometry();

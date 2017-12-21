@@ -9,24 +9,20 @@ y = linspace(0,10,N);
 
 num_u = data(:,1);
 num_v = data(:,2);
-exa_u = data(:,3);
-exa_v = data(:,4);
-norm(num_u-exa_u)/N
-norm(num_v-exa_v)/N
 
-figure(1)
+%clf;
 surf(x, y, reshape(num_u, N, N)', 'EdgeColor', 'interp');
 colormap jet
 colorbar
-caxis([0,0.2]);
 xlabel('x-displament');
-%view(0,90);
+print(['N',num2str(n),'_u.eps'], '-depsc');
 
-figure(2)
+%clf;
 surf(x, y, reshape(num_v, N, N)', 'EdgeColor', 'interp');
 colormap jet
 colorbar
 xlabel('y-displament');
+print(['N',num2str(n),'_v.eps'], '-depsc');
 
 data = load(['N',num2str(n),'_es.dat']);
 num_ex = data(:,1);
@@ -36,28 +32,71 @@ num_sx = data(:,4);
 num_sy = data(:,5);
 num_sxy = data(:,6);
 
-%norm(num_ex-exa_ex)/N
-%norm(num_ey-exa_ey)/N
-%norm(num_exy-exa_exy)/N
-%norm(num_sx-exa_sx)/N
-%norm(num_sy-exa_sy)/N
-%norm(num_sxy-exa_sxy)/N
+clf;
+patch('Faces', TRI, 'Vertices', P, 'FaceVertexCData', num_ex, 'FaceColor', 'flat', ...
+'EdgeColor', 'none');
+colormap jet
+colorbar;
+axis equal;
+xlabel('strain x');
+view(0,90);
+axis([0,0.1,0,0.1]);
+print(['N',num2str(n),'_ex.eps'], '-depsc');
 
-%norm((num_ex-exa_ex)./exa_ex)/N
-%norm((num_ey-exa_ey)./exa_ey)/N
-%norm((num_exy-exa_exy)./exa_exy)/N
-%norm((num_sx-exa_sx)./exa_sx)/N
-%norm((num_sy-exa_sy)./exa_sy)/N
-%norm((num_sxy-exa_sxy)./exa_sxy)/N
+%clf;
+patch('Faces', TRI, 'Vertices', P, 'FaceVertexCData', num_ey, 'FaceColor', 'flat', ...
+'EdgeColor', 'none');
+colormap jet
+colorbar;
+axis equal;
+xlabel('strain y');
+view(0,90);
+axis([0,0.1,0,0.1]);
+print(['N',num2str(n),'_ey.eps'], '-depsc');
 
+%clf;
+patch('Faces', TRI, 'Vertices', P, 'FaceVertexCData', num_exy, 'FaceColor', 'flat', ...
+'EdgeColor', 'none');
+colormap jet
+colorbar;
+axis equal;
+xlabel('strain xy');
+view(0,90);
+axis([0,0.1,0,0.1]);
+print(['N',num2str(n),'_exy.eps'], '-depsc');
 
-%figure(3)
-%patch('Faces', TRI80, 'Vertices', P40, 'FaceVertexCData', exa_ex, 'FaceColor', 'interp', 'EdgeColor', 'interp');
-%patch('Faces', TRI, 'Vertices', P, 'FaceVertexCData', num_ex, 'FaceColor', 'flat', ...
-%'EdgeColor', 'none');
-%axis([0,0.1,0,0.1]);
-%colorbar;
-%axis equal;
-%xlabel('strain x');
+%clf;
+patch('Faces', TRI, 'Vertices', P, 'FaceVertexCData', num_sx, 'FaceColor', 'flat', ...
+'EdgeColor', 'none');
+colormap jet
+colorbar;
+axis equal;
+xlabel('stress x');
+view(0,90);
+axis([0,0.1,0,0.1]);
+print(['N',num2str(n),'_sx.eps'], '-depsc');
+
+%clf;
+patch('Faces', TRI, 'Vertices', P, 'FaceVertexCData', num_sy, 'FaceColor', 'flat', ...
+'EdgeColor', 'none');
+colormap jet
+colorbar;
+axis equal;
+xlabel('stress y');
+view(0,90);
+axis([0,0.1,0,0.1]);
+print(['N',num2str(n),'_sy.eps'], '-depsc');
+
+%clf;
+patch('Faces', TRI, 'Vertices', P, 'FaceVertexCData', num_sxy, 'FaceColor', 'flat', ...
+'EdgeColor', 'none');
+colormap jet
+colorbar;
+axis equal;
+xlabel('stress xy');
+view(0,90);
+axis([0,0.1,0,0.1]);
+print(['N',num2str(n),'_sxy.eps'], '-depsc');
 
 end
+
