@@ -1,4 +1,4 @@
-\documentclass[a3paper, 11pt]{ctexart}
+\documentclass[a4paper, 11pt]{ctexart}
 \usepackage{srcltx,graphicx}
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{color}
@@ -24,29 +24,34 @@
 \setlength{\textheight}{230mm}
 
 \newcommand\bu{\boldsymbol{u}}
+\newcommand\bv{\boldsymbol{v}}
+\newcommand\bx{\boldsymbol{x}}
 \newcommand\bn{\boldsymbol{n}}
+\newcommand\bg{\boldsymbol{g}}
 \newcommand\dd{\mathrm{d}}
+\newcommand\bbR{\mathbb{R}}
+\newcommand\bbV{\mathbb{V}}
+\newcommand\bbH{\mathbb{H}}
 \renewcommand\div{\mathrm{div}}
-
-\newcommand\diff{\,\mathrm{d}}
 
 \newcommand\pd[2]{\dfrac{\partial {#1}}{\partial {#2}}}
 \newcommand\abs[1]{\lvert #1 \rvert}
 \newcommand\norm[1]{\lvert\lvert #1 \rvert\rvert}
-\newcommand\beps{\boldsymbol{\varepsilon}}
-\newcommand\bsig{\boldsymbol{\sigma}}
+\newcommand\beps{\bm{\varepsilon}}
+\newcommand\bsig{\bm{\sigma}}
+\newcommand\bphi{\bm{\phi}}
 \newcommand\trace[1]{tr(#1)}
 
 \title{有限元方法上机作业}
-\author{段俊明\thanks{北京大学数学科学学院，科学与工程计算系，邮箱： {\tt duanjm@pku.edu.cn}}
-}
 
 \begin{document}
+\author{段俊明\thanks{北京大学数学科学学院，科学与工程计算系，邮箱： {\tt duanjm@pku.edu.cn}}
+}
 \maketitle
 
 \section{问题重述}
-求解正方形区域$\Omega=[0,10]\times[0,10]$上的二维弹性力学方程组混合边值问题.
-设边界$\partial\Omega$是Lipschitz连续的,位移为$\bu=(u,v)^\mathrm{T}$,
+先简单介绍三维的弹性力学方程组,
+设边界$\partial\Omega$是Lipschitz连续的,位移为$\bu=(u_1,u_2,u_3)^\mathrm{T}$,
 应变与位移的关系
 \begin{equation}
   \beps(\bu)=\frac12(\nabla\bu+\nabla\bu^{\mathrm{T}}),
@@ -55,112 +60,206 @@
 \begin{equation}
   \bsig(\bu)=\lambda\trace{\beps}I+2\mu\beps,
 \end{equation}
+应变和应力可表示成对称的三阶矩阵,
 其中$\lambda,\mu$是拉梅常数,~$\lambda=3.65e4,\lambda+2\mu=6.70e4$.
 考虑平衡方程,
 \begin{equation}
-  -\sum\limits_{j=1}^2 \partial_j\sigma_{ij}(\bu)=f_i,\quad i=1,2,\\
+  -\sum\limits_{j=1}^3 \partial_j\sigma_{ij}(\bu)=f_i,\quad i=1,2,3,
+  \label{eq:balance}
 \end{equation}
-其中$\boldsymbol{f}=(f_1,f_2)^\mathrm{T}$是外力,
+其中$\boldsymbol{f}=(f_1,f_2,f_3)^\mathrm{T}$是体积力,
 将应力带入平衡方程,
 \begin{align}
   &-\mu\Delta\bu-(\lambda+\mu)\nabla(\nabla\cdot\bu)=\boldsymbol{f},\quad in~\Omega,\\
-  &\sum\limits_{j=1}^2 \sigma_{ij}(\bu)\bn_j=g_i,\quad on~\Gamma_1,\\
+  &\sum\limits_{j=1}^3 \sigma_{ij}(\bu)\bn_j=g_i,\quad on~\Gamma_1,\\
   &\bu=0,\quad on~\Gamma_0,
 \end{align}
+其中$\Gamma_0$是固定边界,~$\Gamma_1$是自由边界.
+
+考虑二维平面应变问题,即假设$z$方向应变为0,有
+$u_3=0,~\beps_{31}=\beps_{32}=\beps_{33} =0$,
+且$\bsig_{31}=\bsig_{32}=0$,
+由$\bsig_{33}=\lambda(\beps_{11}+\beps_{22})+2\mu\beps_{33}$
+得到$\bsig_{33}=\lambda(\beps_{11}+\beps_{22})$.
+
+求解正方形区域$\Omega=[0,10]\times[0,10]$上的平面弹性力学方程组混合边值问题.
 其中,~$\Gamma_0$是正方形的底边,使用固定边界条件,~$\Gamma_1$是正方形的另外三条边,
 使用自由边界条件.
 
-假设精确解为$u=x^2y^2,v=x^2\sin(y)$,带入以上方程组得到,
-$$f_1=-\left(2\,y^2+2\,x\,\cos y\right)\,\left(\mu+\lambda\right)-\mu\,
-\left(2\,x^2+2\,y^2\right),$$
-$$f_2=-\left(4\,x\,y-x^2\,\sin y\right)\,\left(\mu+\lambda\right)-\mu\,
-\left(2\,\sin y-x^2\,\sin y\right),$$
-$$g_{l1}=-\lambda(x^2\cos y+2xy^2)-4\mu xy^2, $$
-$$g_{l2}=-2\mu(x\sin y+x^2y), $$
-$$g_{r1}=\lambda(x^2\cos y+2xy^2)+4\mu xy^2, $$
-$$g_{r2}=2\mu(x\sin y+x^2y), $$
-$$g_{u1}=2\mu(x\sin y+x^2y), $$
-$$g_{u2}=\lambda(x^2\cos y+2xy^2)+2\mu x^2\cos y, $$
-下标$l,r,u$分别表示左、右、上边界,下标$1,2$分别表示第一、二个分量.
-
 \section{数值方法}
-将原问题化为变分形式:
-%\begin{equation}
-	%\begin{cases}
-		%a(u,v) = f(v), \\
-		%a(u,v) = \int_\Omega \nabla u·\nabla v\dd \bx + \beta\int_{\Omega_1}uv\dd s, \\
-		%f(v) = \int_\Omega fv\dd \bx + \int_{\Omega_1}gv\dd s, \\
-		%u\in\bbV_1=\{\bbH^1(\Omega),u|_{\partial\Omega_0 = u_0} \}, \\
-		%v\in\bbV_2=\{\bbH^1(\Omega),v|_{\partial\Omega_0 = 0} \}. \\
-	%\end{cases}
-%\end{equation}
+取试探函数空间$\bu\in\bbV(0;\Omega)=\{\bu\in\bbH^1(\Omega):\bu|_{\Gamma_0}=0\}$,
+及检验函数空间$\bv\in\bbV(0;\Omega)$,
+将二维的平衡方程乘以$\bv\in{\bbR^2}$,使用Green公式
+\begin{equation}
+  \int_{\Omega}u\partial_i v\dd \bx=-\int_{\Omega}\partial_i uv\dd
+  \bx+\int_{\Gamma}uv\bn_i\dd s,
+\end{equation}
+以及边界条件,得到变分形式
+\begin{align}
+  &a(\bu,\bv) = f(\bv),\quad\forall \bv\in\bbV(0;\Omega)\\
+  &a(\bu,\bv) = \int_\Omega \sum_{i,j}\bsig_{ij}(\bu)\beps_{ij}(\bv)\dd\bx, \\
+  &f(\bv) = \int_\Omega \boldsymbol{f}\bv\dd \bx + \int_{\Gamma_1}\bg\bv\dd s.
+\end{align}
 
-%取xy方向同样为$N$的网格数，将以上变分问题离散化,等价与求解线性方程组:
-%\begin{equation}
-	%\sum_{i=1}^{N_h}a(\phi_j,\phi_i)u_j=(f,\phi_i),\quad i=1,2,\dots,N_h.
-%\end{equation}
-%其中$N_h$为总节点数，$\phi_i$为一组基函数,在第$i$个节点上为1,其它节点处为0.
-%$u_i$为第$i$个节点上的数值解.
+取有限维子空间$\bbV_h(0;\Omega)$逼近原空间,上述变分形式变为
+\begin{align}
+  &a(\bu_h,\bv_h) = f(\bv_h),\quad\forall \bv_h\in\bbV_h(0;\Omega)\\
+  &a(\bu_h,\bv_h) = \int_\Omega \sum_{i,j}\bsig_{ij}(\bu_h)\beps_{ij}(\bv_h)\dd\bx, \\
+  &f(\bv_h) = \int_\Omega \boldsymbol{f}\bv_h\dd \bx +
+  \int_{\Gamma_1}\bg\bv_h\dd s.
+  \label{eq:dis-vp}
+\end{align}
+取$\bbV_h(0;\Omega)$上的一组基函数$\boldsymbol\bphi_i,\ i=0,\dots,N_h-1$,
+令
+\begin{equation}
+  \bu_h=\sum\limits_{j=0}^{N_h-1}u_j\boldsymbol\bphi_j,~\bv_h=\sum\limits_{j=0}^{N_h-1}v_j\boldsymbol\bphi_j,
+\end{equation}
+则可以将离散问题\eqref{eq:dis-vp}等价于,求
+$\bu_h=(u_0,\dots u_{N_h-1})^\mathrm{T}\in\bbR^{N_h}$,使得
+\begin{equation}
+  \sum_{i,j=0}^{N_h-1}a(\boldsymbol\bphi_j,\boldsymbol\bphi_i)u_jv_i=\sum_{i=0}^{N_h-1}(f,\boldsymbol\bphi_i)v_i,\quad
+  \forall \bv_h=(v_0,\dots,v_{N_h-1})^\mathrm{T}\in\bbR^{N_h},
+\end{equation}
+由$\bv_h$的任意性,等价于求解线性方程组
+\begin{equation}
+  \sum_{j=0}^{N_h-1}a(\boldsymbol\bphi_j,\boldsymbol\bphi_i)u_j=(f,\boldsymbol\bphi_i),\quad
+  i=0,\dots,N_h-1,
+\end{equation}
+记为$K\bu_h=\boldsymbol{f}$,~$K=(k_{ij})$.
 
-%将上述方程组写作:
-%$$\boldsymbol K\bu_h=\boldsymbol f,$$
-%并称$\boldsymbol K$为刚度矩阵,$\bu_h$为位移向量,$\boldsymbol f$为载荷向量.
+对区域$\Omega$做三角形剖分,记空间网格尺寸为$h$,记单元为$T_i,\ i=0,\dots,M-1$,节点为$A_i,\
+i=0,\dots,N-1$,取分片线性基函数,即$\bphi_{2i},\bphi_{2i+1}\in\bbV_h(0;\Omega)$,满足
+\begin{equation}
+  \bphi_{2i}(A_j)=(\delta_{ij},0)^\mathrm{T},\quad
+  \bphi_{2i+1}(A_j)=(0,\delta_{ij})^\mathrm{T},
+  \quad i=0,\dots,N-1, A_i\notin\Gamma_0,
+\end{equation}
+这里$N_h=2N$.
 
-%下面需要确定的就是$\boldsymbol K$和$\boldsymbol f$的元素.
+引入数组$en(\alpha,e)$,其中$e$为单元序数,~$\alpha$为单元的局部基函数序数,即第$e$个
+单元的第$\alpha$个基函数对应于第$en(\alpha,e)$个整体节点;
+取值为空间坐标的$cd(i,nd)$,其中$nd$为整体节点序数,~$cd(i,nd)$为第$nd$个整体节点
+的空间坐标的第$i$个分量.记
+$a^e(\bu,\bv)=\int_{T^e}\sum_{i,j}\bsig_{ij}(\bu)\beps_{ij}(\bv)\dd\bx$,
+由刚度矩阵的定义,
+\begin{equation}
+  k_{ij}=a(\bphi_j,\bphi_i)=\sum_{e=0}^{M-1}a^e(\bphi_j,\bphi_i)=\sum_{e=0}^{M-1}k^e_{ij}.
+\end{equation}
+设$\alpha,\beta=0,\dots,5$为$T^e$的6个基函数的局部序数,即$T^e$上6个基函数分别为
+$\bphi^e_0,\dots,A^e_5$,
+定义单元刚度矩阵$K^e=(k^e_{\alpha\beta})$,
+\begin{equation}
+  k^e_{\alpha,\beta}=a^e(\bphi_\alpha^e,\bphi_\beta^e),
+\end{equation}
+则可以合成为刚度矩阵$K$,
+\begin{equation}
+  k_{ij}=\sum_{\substack{en(\alpha,e)=i\in T^e\\en(\beta,e)=j\in T^e}} k_{\alpha,\beta}^e.
+\end{equation}
+同样计算单元载荷向量$\boldsymbol{f}^e=(f^e_\alpha)$,
+\begin{equation}
+  f^e_\alpha=\int_{T^e}\boldsymbol{f}\bphi_\alpha^e\dd\bx,
+\end{equation}
+则总载荷向量$\boldsymbol{f}=(f_i)$满足
+\begin{equation}
+  f_i=\sum\limits_{en(\alpha,e)=i\in T^e}f^e_\alpha.
+\end{equation}
+生成了刚度矩阵和载荷向量后,我们即可求解线性方程组得到数值解.
 
-%用$e$来表示单元序号，$T_e$表示单元，$a^e(u,v)=\int_{T_e}\nabla u·\nabla v\dd \bx$,
-%定义单元刚度矩阵$\boldsymbol K^e$和单元载荷向量$\boldsymbol f^e$,
-%则
-%\begin{align}
-	%k_{ij}=a(\phi_j,\phi_i)=\sum_{e=1}^Ma^e(\phi_j,\phi_i)=\sum_{e=1}^Mk_{ij}^e.
-%\end{align}
+下面计算单元刚度矩阵,
+设三角形三个顶点坐标为$(x_1,y_1),(x_2,y_2),(x_3,y_3)$,
+设点$(x,y)$的重心坐标为$\lambda_1,\lambda_2,\lambda_3$,满足
+\begin{equation}
+  \begin{bmatrix}
+    \lambda_1\\ \lambda_2\\ \lambda_3\\
+  \end{bmatrix}
+  =
+  \dfrac{1}{D}
+  \begin{bmatrix}
+    a_1 & b_1 & -c_1 \\
+    a_2 & b_2 & -c_2 \\
+    a_3 & b_3 & -c_3 \\
+  \end{bmatrix}
+  \begin{bmatrix}
+    1 \\ x \\ y\\
+  \end{bmatrix},
+\end{equation}
+其中
+\begin{align}
+& a_1=x_2y_3-x_3y_2,~b_1=y_2-y_3,~c_1=x_2-x_3, \\
+& a_2=x_3y_1-x_1y_3,~b_2=y_3-y_1,~c_2=x_3-x_1, \\
+& a_3=x_1y_2-x_2y_1,~b_3=y_1-y_2,~c_3=x_1-x_2.
+\end{align}
+$D$为三角形面积的2倍.
+设位移为
+$u=u_1\lambda_1+u_2\lambda_2+u_3\lambda_3,v=v_1\lambda_1+v_2\lambda_2+v_3\lambda_3$,
+则应变满足
+\begin{equation}
+  \beps=
+  \begin{bmatrix}
+    \varepsilon_x \\
+    \varepsilon_y \\
+    \varepsilon_{xy}\\
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    \pd{u}{x} \\
+    \pd{v}{y} \\
+    \pd{u}{y}+\pd{v}{x} \\
+  \end{bmatrix}
+    =
+    \begin{bmatrix}
+      \pd{\lambda_1}{x} & 0 & \pd{\lambda_2}{x} & 0 & \pd{\lambda_3}{x} & 0 \\
+      0 & \pd{\lambda_1}{y} & 0 & \pd{\lambda_2}{y} & 0 & \pd{\lambda_3}{y} \\
+      \pd{\lambda_1}{y} & \pd{\lambda_1}{x} & \pd{\lambda_2}{y} & \pd{\lambda_2}{x} & \pd{\lambda_3}{y} & \pd{\lambda_3}{x} \\
+    \end{bmatrix}
+    \begin{bmatrix}
+      u_1 \\ v_1 \\ u_2 \\ v_2 \\ u_3 \\ v_3 \\
+    \end{bmatrix}
+    \triangleq B\tilde{\bm{u}},
+\end{equation}
+计算得
+\begin{equation}
+  B=
+  \dfrac{1}{D}
+  \begin{bmatrix}
+    b_1 & 0 & b_2 & 0 & b_3 & 0 \\
+    0 & -c_1 & 0 & -c_2 & 0 & -c_3 \\
+    -c_1 & b_1 & -c_2 & b_2 & -c_3 & b_3 \\
+  \end{bmatrix},
+\end{equation}
+注意这里$\varepsilon_{xy}=2\beps_{12}$,但最后推导出的单元刚度矩阵相同.
+应力满足
+\begin{equation}
+  \bsig=\begin{bmatrix}
+    {\sigma_x} \\
+    {\sigma_y} \\
+    \sigma_{xy}\\
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+      \lambda+2\mu & \lambda & 0 \\
+      \lambda & \lambda+2\mu & 0 \\
+      0 & 0 & \mu \\
+    \end{bmatrix}
+    \beps
+    \triangleq L\beps,
+\end{equation}
+则
+\begin{equation}
+  K^e=\int_{T^e}\bsig^{\mathrm{T}}\beps\dd\bx=\dfrac{D}{2}B^\mathrm{T}LB.
+\end{equation}
 
-%其中$k_{ij}^e$表示第$e$个单元的单元刚度矩阵的$(i,j)$元素.
-%对于型(1)三角形单元，书上$P_{213}$已经给出单元刚度矩阵$\boldsymbol K^e$的结果;
-%对于型(1)矩形单元,下面给出单元刚度矩阵:
+单元载荷向量我们通过数值积分来计算,这里单元上的数值积分使用2阶代数精度的三角形上
+的Gauss积分点,边界上的线积分使用3阶代数精度的一维的Gauss积分点.
 
-%取边长为1的正方形,有四个节点$(0,0),(1,0),(1,1),(0,1)$,给出它们的一组基:
-%$$(1-x)(1-y),x(1-y),xy,(1-x)y.$$
-%利用与书上类似的仿射变换，将任意正方形上的单元刚度矩阵统一到标准正方形上来处理,
-%最终得到:
-%\[ \boldsymbol K^e=\dfrac{h^2}{\det A_e}\begin{bmatrix}
-		%\frac 23 & -\frac 16 && -\frac 13 && -\frac 16 \\
-		%-\frac 16 & \frac 23 && -\frac 16 && -\frac 13 \\
-		%-\frac 13 & -\frac 16 && \frac 23 && -\frac 16 \\
-		%-\frac 16 & -\frac 13 && -\frac 16 && \frac 23 \\
-	%\end{bmatrix} \]
-
-%当$f$为常数时，与书上类似得到:
-%\[ \boldsymbol f^e=\dfrac 14f(T_e)\abs{T_e}(1,1,1)^\mathrm T. \]
-
-%对于边界项积分，采用数值积分公式,并将其加入到刚度矩阵和载荷向量中;
-%对于Diriclet边界上的节点,将其从生成的线性方程组中去除.
-
-%\section{算法}
-%基于以上分析，有如下算法:
-
-%\begin{algorithm}[H]
-%\caption{生成刚度矩阵和载荷向量}
-%\SetAlgoNoLine
-%$\boldsymbol K= (k(i,j))=0;\boldsymbol f=(f(i))=0;$\\
-%\For{$e=1:M$}
-%{
-	%$\text{计算单元刚度矩阵}\boldsymbol K^e=(k^e(\alpha,\beta))$; \\
-	%$\text{计算单元载荷向量}\boldsymbol f^e=(f^e(\alpha))$; \\
-	%$k^e(en(\alpha,e),en(\beta,e))+=k^e(\alpha,\beta)$; \\
-	%$f^e(en(\alpha,e))+=f^e(\alpha)$; \\
-%}
-%\label{al:fem}
-%\end{algorithm}
-
-%其中$en(\alpha,e)$是取值为整体节点序数的数组，$\alpha$为局部节点序数.
-%还需要保存单元坐标，$cd(i,nd)$是取值为空间坐标的数组，表示第$nd$个整体节点
-%的空间坐标的第$i$个分量.
-
-%\section{程序说明}
-%main.cpp是调用fem.h的主函数，space.h是计算cd,en两个数组的头文件,
-%fem.cpp实现了该算例生成线性方程组并求解的过程.
-%线性方程组部分调用了Eigen的稀疏矩阵LU求解器.
+\section{数值实验}
+令体积力$f_1=f_2=0$,沿法向受力为$0$,即$g_1=g_2=0$,除了左上角的
+第一个网格,它的受力为$\sigma_x=1,\sigma_y=-1,\sigma_{xy}=0$,则它的两条边的边界条件为
+$$g_{l1}=-1,$$
+$$g_{l2}=0,$$
+$$g_{u1}=0, $$
+$$g_{u2}=-1, $$
+下标$l,r,u$分别表示左、右、上边界,下标$1,2$分别表示第一、二个分量.
 
 
 \end{document}
